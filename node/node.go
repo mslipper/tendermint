@@ -244,13 +244,16 @@ func NewNode(config *cfg.Config,
 	csMetrics, p2pMetrics, memplMetrics := metricsProvider()
 
 	// Make MempoolReactor
-	maxBytes := state.ConsensusParams.TxSize.MaxBytes
+	maxDataBytes := types.MaxDataBytesUnknownEvidence(
+		state.ConsensusParams.BlockSize.MaxBytes,
+		state.Validators.Size(),
+	)
 	mempool := mempl.NewMempool(
 		config.Mempool,
 		proxyApp.Mempool(),
 		state.LastBlockHeight,
 		mempl.WithMetrics(memplMetrics),
-		mempl.WithFilter(func(tx types.Tx) bool { return len(tx) <= maxBytes }),
+		mempl.WithFilter(func(tx types.Tx) bool { return len(tx) <= maxDataBytes }),
 	)
 	mempoolLogger := logger.With("module", "mempool")
 	mempool.SetLogger(mempoolLogger)
